@@ -64,7 +64,7 @@ if sgmlop:
             try:
                 self.handle_data(self.entity[entity])
             except KeyError:
-                self.handle_data("&%s;" % entity)
+                self.handle_data(f"&{entity};")
 
 else:
     FastParser = None
@@ -340,7 +340,7 @@ skip_impl = (
 )
 
 def skip_function(name):
-    if name[0:12] == "xmlXPathWrap":
+    if name[:12] == "xmlXPathWrap":
         return 1
     if name == "xmlFreeParserCtxt":
         return 1
@@ -387,10 +387,7 @@ def skip_function(name):
         return 1
     if name == "xmlValidateElementDecl":
         return 1
-    if name == "xmlValidateAttributeDecl":
-        return 1
-
-    return 0
+    return 1 if name == "xmlValidateAttributeDecl" else 0
 
 def print_function_wrapper(name, output, export, include):
     global py_types
@@ -733,93 +730,91 @@ reference_keepers = {
 	"SchemaValidCtxt": [('Schema', 'schema')],
 }
 
-function_classes = {}
-
-function_classes["None"] = []
+function_classes = {"None": []}
 
 def nameFixup(name, classe, type, file):
-    listname = classe + "List"
+    listname = f"{classe}List"
     ll = len(listname)
     l = len(classe)
-    if name[0:l] == listname:
+    if name[:l] == listname:
         func = name[l:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:12] == "xmlParserGet" and file == "python_accessor":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:12] == "xmlParserGet" and file == "python_accessor":
         func = name[12:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:12] == "xmlParserSet" and file == "python_accessor":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:12] == "xmlParserSet" and file == "python_accessor":
         func = name[12:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:10] == "xmlNodeGet" and file == "python_accessor":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:10] == "xmlNodeGet" and file == "python_accessor":
         func = name[10:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:9] == "xmlURIGet" and file == "python_accessor":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:9] == "xmlURIGet" and file == "python_accessor":
         func = name[9:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:9] == "xmlURISet" and file == "python_accessor":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:9] == "xmlURISet" and file == "python_accessor":
         func = name[6:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:11] == "xmlErrorGet" and file == "python_accessor":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:11] == "xmlErrorGet" and file == "python_accessor":
         func = name[11:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:17] == "xmlXPathParserGet" and file == "python_accessor":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:17] == "xmlXPathParserGet" and file == "python_accessor":
         func = name[17:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:11] == "xmlXPathGet" and file == "python_accessor":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:11] == "xmlXPathGet" and file == "python_accessor":
         func = name[11:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:11] == "xmlXPathSet" and file == "python_accessor":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:11] == "xmlXPathSet" and file == "python_accessor":
         func = name[8:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:15] == "xmlOutputBuffer" and file != "python":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:15] == "xmlOutputBuffer" and file != "python":
         func = name[15:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:20] == "xmlParserInputBuffer" and file != "python":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:20] == "xmlParserInputBuffer" and file != "python":
         func = name[20:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:9] == "xmlRegexp" and file == "xmlregexp":
-        func = "regexp" + name[9:]
-    elif name[0:6] == "xmlReg" and file == "xmlregexp":
-        func = "regexp" + name[6:]
-    elif name[0:20] == "xmlTextReaderLocator" and file == "xmlreader":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:9] == "xmlRegexp" and file == "xmlregexp":
+        func = f"regexp{name[9:]}"
+    elif name[:6] == "xmlReg" and file == "xmlregexp":
+        func = f"regexp{name[6:]}"
+    elif name[:20] == "xmlTextReaderLocator" and file == "xmlreader":
         func = name[20:]
-    elif name[0:18] == "xmlTextReaderConst" and file == "xmlreader":
+    elif name[:18] == "xmlTextReaderConst" and file == "xmlreader":
         func = name[18:]
-    elif name[0:13] == "xmlTextReader" and file == "xmlreader":
+    elif name[:13] == "xmlTextReader" and file == "xmlreader":
         func = name[13:]
-    elif name[0:12] == "xmlReaderNew" and file == "xmlreader":
+    elif name[:12] == "xmlReaderNew" and file == "xmlreader":
         func = name[9:]
-    elif name[0:11] == "xmlACatalog":
+    elif name[:11] == "xmlACatalog":
         func = name[11:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:l] == classe:
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:l] == classe:
         func = name[l:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:7] == "libxml_":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:7] == "libxml_":
         func = name[7:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:6] == "xmlGet":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:6] == "xmlGet":
         func = name[6:]
-        func = string.lower(func[0:1]) + func[1:]
-    elif name[0:3] == "xml":
+        func = string.lower(func[:1]) + func[1:]
+    elif name[:3] == "xml":
         func = name[3:]
-        func = string.lower(func[0:1]) + func[1:]
+        func = string.lower(func[:1]) + func[1:]
     else:
         func = name
-    if func[0:5] == "xPath":
-        func = "xpath" + func[5:]
-    elif func[0:4] == "xPtr":
-        func = "xpointer" + func[4:]
-    elif func[0:8] == "xInclude":
-        func = "xinclude" + func[8:]
-    elif func[0:2] == "iD":
-        func = "ID" + func[2:]
-    elif func[0:3] == "uRI":
-        func = "URI" + func[3:]
-    elif func[0:4] == "uTF8":
-        func = "UTF8" + func[4:]
-    elif func[0:3] == 'sAX':
-        func = "SAX" + func[3:]
+    if func[:5] == "xPath":
+        func = f"xpath{func[5:]}"
+    elif func[:4] == "xPtr":
+        func = f"xpointer{func[4:]}"
+    elif func[:8] == "xInclude":
+        func = f"xinclude{func[8:]}"
+    elif func[:2] == "iD":
+        func = f"ID{func[2:]}"
+    elif func[:3] == "uRI":
+        func = f"URI{func[3:]}"
+    elif func[:4] == "uTF8":
+        func = f"UTF8{func[4:]}"
+    elif func[:3] == 'sAX':
+        func = f"SAX{func[3:]}"
     return func
 
 
@@ -837,9 +832,7 @@ def functionCompare(info1, info2):
         return 1
     if file1 < file2:
         return -1
-    if file1 > file2:
-        return 1
-    return 0
+    return 1 if file1 > file2 else 0
 
 def writeDoc(name, args, indent, output):
      if functions[name][0] is None or functions[name][0] == "":

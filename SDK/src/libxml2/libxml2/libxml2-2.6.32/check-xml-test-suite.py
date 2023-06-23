@@ -31,9 +31,9 @@ def errorHandler(ctx, str):
     error_nr = error_nr + 1
     if len(error_msg) < 300:
         if len(error_msg) == 0 or error_msg[-1] == '\n':
-	    error_msg = error_msg + "   >>" + str
-	else:
-	    error_msg = error_msg + str
+            error_msg = f"{error_msg}   >>{str}"
+        else:
+            error_msg = error_msg + str
 
 libxml2.registerErrorHandler(errorHandler, None)
 

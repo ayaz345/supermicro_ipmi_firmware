@@ -58,10 +58,7 @@ from xml.sax.handler import \
 # libxml2 returns strings as UTF8
 _decoder = codecs.lookup("utf8")[1]
 def _d(s):
-    if s is None:
-        return s
-    else:
-        return _decoder(s)[0]
+    return s if s is None else _decoder(s)[0]
 
 try:
     import libxml2
@@ -120,14 +117,10 @@ class LibXml2Reader(xmlreader.XMLReader):
             if severity in (libxml2.PARSER_SEVERITY_VALIDITY_WARNING,
                             libxml2.PARSER_SEVERITY_WARNING):
                 self._err_handler.warning(exception)
+            elif fatal and exception is self.__errors[-1][1]:
+                self._err_handler.fatalError(exception)
             else:
-                # when fatal is set, the parse will stop;
-                # we consider that the last error reported
-                # is the fatal one.
-                if fatal and exception is self.__errors[-1][1]:
-                    self._err_handler.fatalError(exception)
-                else:
-                    self._err_handler.error(exception)
+                self._err_handler.error(exception)
         self.__errors = None
 
     def parse(self, source):
@@ -162,18 +155,18 @@ class LibXml2Reader(xmlreader.XMLReader):
                 r = reader.Read()
                 # check for errors
                 if r == 1:
-                    if not self.__errors is None:
+                    if self.__errors is not None:
                         self._reportErrors(0)
                 elif r == 0:
-                    if not self.__errors is None:
+                    if self.__errors is not None:
                         self._reportErrors(0)
                     break # end of parse
                 else:
-                    if not self.__errors is None:
+                    if self.__errors is not None:
                         self._reportErrors(1)
                     else:
                         self._err_handler.fatalError(\
-                            SAXException("Read failed (no details available)"))
+                                SAXException("Read failed (no details available)"))
                     break # fatal parse error
                 # get node type
                 nodeType = reader.NodeType()
@@ -181,7 +174,7 @@ class LibXml2Reader(xmlreader.XMLReader):
                 if nodeType == 1: 
                     if self.__ns:
                         eltName = (_d(reader.NamespaceUri()),\
-                                   _d(reader.LocalName()))
+                                       _d(reader.LocalName()))
                         eltQName = _d(reader.Name())
                         attributesNSImpl._attrs = attrs = {}
                         attributesNSImpl._qnames = qnames = {}
@@ -190,13 +183,10 @@ class LibXml2Reader(xmlreader.XMLReader):
                             qname = _d(reader.Name())
                             value = _d(reader.Value())
                             if qname.startswith("xmlns"):
-                                if len(qname) > 5:
-                                    newPrefix = qname[6:]
-                                else:
-                                    newPrefix = None
+                                newPrefix = qname[6:] if len(qname) > 5 else None
                                 newPrefixes.append(newPrefix)
                                 self._cont_handler.startPrefixMapping(\
-                                    newPrefix,value)
+                                        newPrefix,value)
                                 if not self.__nspfx:
                                     continue # don't report xmlns attribute
                             attName = (_d(reader.NamespaceUri()),
@@ -205,7 +195,7 @@ class LibXml2Reader(xmlreader.XMLReader):
                             attrs[attName] = value
                         reader.MoveToElement()
                         self._cont_handler.startElementNS( \
-                            eltName,eltQName,attributesNSImpl) 
+                                eltName,eltQName,attributesNSImpl)
                         if reader.IsEmptyElement():
                             self._cont_handler.endElementNS(eltName,eltQName)
                             for newPrefix in newPrefixes:
@@ -220,80 +210,52 @@ class LibXml2Reader(xmlreader.XMLReader):
                             attrs[attName] = _d(reader.Value())
                         reader.MoveToElement()
                         self._cont_handler.startElement( \
-                            eltName,attributesImpl)
+                                eltName,attributesImpl)
                         if reader.IsEmptyElement():
                             self._cont_handler.endElement(eltName)
-                # EndElement
                 elif nodeType == 15: 
                     if self.__ns:
                         self._cont_handler.endElementNS( \
-                             (_d(reader.NamespaceUri()),_d(reader.LocalName())),
+                                 (_d(reader.NamespaceUri()),_d(reader.LocalName())),
                              _d(reader.Name()))
                         for prefix in prefixes.pop():
                             self._cont_handler.endPrefixMapping(prefix)
                     else:
                         self._cont_handler.endElement(_d(reader.Name()))
-                # Text
                 elif nodeType == 3: 
                     self._cont_handler.characters(_d(reader.Value()))
-                # Whitespace
                 elif nodeType == 13: 
                     self._cont_handler.ignorableWhitespace(_d(reader.Value()))
-                # SignificantWhitespace
                 elif nodeType == 14:
                     self._cont_handler.characters(_d(reader.Value()))
-                # CDATA
                 elif nodeType == 4:
-                    if not self.__lex_handler is None:
+                    if self.__lex_handler is not None:
                         self.__lex_handler.startCDATA()
                     self._cont_handler.characters(_d(reader.Value()))
-                    if not self.__lex_handler is None:
+                    if self.__lex_handler is not None:
                         self.__lex_handler.endCDATA()
-                # EntityReference
                 elif nodeType == 5:
-                    if not self.__lex_handler is None:
+                    if self.__lex_handler is not None:
                         self.startEntity(_d(reader.Name()))
                     reader.ResolveEntity()
-                # EndEntity
                 elif nodeType == 16:
-                    if not self.__lex_handler is None:
+                    if self.__lex_handler is not None:
                         self.endEntity(_d(reader.Name()))
-                # ProcessingInstruction
                 elif nodeType == 7: 
                     self._cont_handler.processingInstruction( \
-                        _d(reader.Name()),_d(reader.Value()))
-                # Comment
+                            _d(reader.Name()),_d(reader.Value()))
                 elif nodeType == 8:
-                    if not self.__lex_handler is None:
+                    if self.__lex_handler is not None:
                         self.__lex_handler.comment(_d(reader.Value()))
-                # DocumentType
                 elif nodeType == 10:
                     #if not self.__lex_handler is None:
                     #    self.__lex_handler.startDTD()
                     pass # TODO (how to detect endDTD? on first non-dtd event?)
-                # XmlDeclaration
                 elif nodeType == 17:
                     pass # TODO
-                # Entity
                 elif nodeType == 6:
                     pass # TODO (entity decl)
-                # Notation (decl)
-                elif nodeType == 12:
-                    pass # TODO
-                # Attribute (never in this loop)
-                #elif nodeType == 2: 
-                #    pass
-                # Document (not exposed)
-                #elif nodeType == 9: 
-                #    pass
-                # DocumentFragment (never returned by XmlReader)
-                #elif nodeType == 11:
-                #    pass
-                # None
-                #elif nodeType == 0:
-                #    pass
-                # -
-                else:
+                elif nodeType != 12:
                     raise SAXException("Unexpected node type %d" % nodeType)
             if r == 0:
                 self._cont_handler.endDocument()
@@ -321,13 +283,12 @@ class LibXml2Reader(xmlreader.XMLReader):
         elif name == feature_external_pes:
             return self.__extparams
         else:
-            raise SAXNotRecognizedException("Feature '%s' not recognized" % \
-                                            name)
+            raise SAXNotRecognizedException(f"Feature '{name}' not recognized")
 
     def setFeature(self, name, state):
         if self.__parsing:
             raise SAXNotSupportedException("Cannot set feature %s " \
-                                           "while parsing" % name)
+                                               "while parsing" % name)
         if name == feature_namespaces:
             self.__ns = state
         elif name == feature_namespace_prefixes:
@@ -337,13 +298,11 @@ class LibXml2Reader(xmlreader.XMLReader):
         elif name == feature_external_ges:
             if state == 0:
                 # TODO (does that relate to PARSER_LOADDTD)?
-                raise SAXNotSupportedException("Feature '%s' not supported" % \
-                                               name)
+                raise SAXNotSupportedException(f"Feature '{name}' not supported")
         elif name == feature_external_pes:
             self.__extparams = state
         else:
-            raise SAXNotRecognizedException("Feature '%s' not recognized" % \
-                                            name)
+            raise SAXNotRecognizedException(f"Feature '{name}' not recognized")
 
     def getProperty(self, name):
         if name == property_lexical_handler:
@@ -351,20 +310,16 @@ class LibXml2Reader(xmlreader.XMLReader):
         elif name == property_declaration_handler:
             return self.__decl_handler
         else:
-            raise SAXNotRecognizedException("Property '%s' not recognized" % \
-                                            name)
+            raise SAXNotRecognizedException(f"Property '{name}' not recognized")
 
     def setProperty(self, name, value):     
         if name == property_lexical_handler:
             self.__lex_handler = value
         elif name == property_declaration_handler:
             # TODO: remove if/when libxml2 supports dtd events
-            raise SAXNotSupportedException("Property '%s' not supported" % \
-                                           name)
-            self.__decl_handler = value
+            raise SAXNotSupportedException(f"Property '{name}' not supported")
         else:
-            raise SAXNotRecognizedException("Property '%s' not recognized" % \
-                                            name)
+            raise SAXNotRecognizedException(f"Property '{name}' not recognized")
 
 def create_parser():
     return LibXml2Reader()

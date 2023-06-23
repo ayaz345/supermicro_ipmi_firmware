@@ -24,7 +24,7 @@ expect="""../../test/valid/rss.xml:177: element rss: validity error : Element rs
 """
 def callback(ctx, str):
     global err
-    err = err + "%s" % (str)
+    err = f"{err}{str}"
 libxml2.registerErrorHandler(callback, "")
 
 valid_files = glob.glob("../../test/valid/*.x*")
@@ -123,9 +123,7 @@ expect="""10 test
 res=""
 
 def myResolver(URL, ID, ctxt):
-    if URL == "tst.ent":
-        return(StringIO.StringIO(tst_ent))
-    return None
+    return (StringIO.StringIO(tst_ent)) if URL == "tst.ent" else None
 
 libxml2.setEntityLoader(myResolver)
 

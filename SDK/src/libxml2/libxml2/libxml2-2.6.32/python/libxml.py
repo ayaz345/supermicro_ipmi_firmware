@@ -10,9 +10,7 @@ class libxmlError(Exception): pass
 #
 def pos_id(o):
     i = id(o)
-    if (i < 0):
-        return (sys.maxint - i)
-    return i
+    return (sys.maxint - i) if (i < 0) else i
 
 #
 # Errors raised by the wrappers when some tree handling failed.
@@ -47,31 +45,27 @@ class ioWrapper:
         self._o = None
 
     def io_close(self):
-        if self.__io == None:
+        if self.__io is None:
             return(-1)
         self.__io.close()
         self.__io = None
         return(0)
 
     def io_flush(self):
-        if self.__io == None:
+        if self.__io is None:
             return(-1)
         self.__io.flush()
         return(0)
 
     def io_read(self, len = -1):
-        if self.__io == None:
+        if self.__io is None:
             return(-1)
-        if len < 0:
-            return(self.__io.read())
-        return(self.__io.read(len))
+        return (self.__io.read()) if len < 0 else (self.__io.read(len))
 
     def io_write(self, str, len = -1):
-        if self.__io == None:
+        if self.__io is None:
             return(-1)
-        if len < 0:
-            return(self.__io.write(str))
-        return(self.__io.write(str, len))
+        return (self.__io.write(str)) if len < 0 else (self.__io.write(str, len))
 
 class ioReadWrapper(ioWrapper):
     def __init__(self, _obj, enc = ""):
@@ -247,50 +241,35 @@ class xmlCore:
         if other == None:
             return False
         ret = libxml2mod.compareNodesEqual(self._o, other._o)
-        if ret == None:
-            return False
-        return ret == True
+        return False if ret == None else ret == True
     def __ne__(self, other):
         if other == None:
             return True
         ret = libxml2mod.compareNodesEqual(self._o, other._o)
         return not ret
     def __hash__(self):
-        ret = libxml2mod.nodeHash(self._o)
-        return ret
+        return libxml2mod.nodeHash(self._o)
 
     def __str__(self):
         return self.serialize()
     def get_parent(self):
         ret = libxml2mod.parent(self._o)
-        if ret == None:
-            return None
-        return xmlNode(_obj=ret)
+        return None if ret is None else xmlNode(_obj=ret)
     def get_children(self):
         ret = libxml2mod.children(self._o)
-        if ret == None:
-            return None
-        return xmlNode(_obj=ret)
+        return None if ret is None else xmlNode(_obj=ret)
     def get_last(self):
         ret = libxml2mod.last(self._o)
-        if ret == None:
-            return None
-        return xmlNode(_obj=ret)
+        return None if ret is None else xmlNode(_obj=ret)
     def get_next(self):
         ret = libxml2mod.next(self._o)
-        if ret == None:
-            return None
-        return xmlNode(_obj=ret)
+        return None if ret is None else xmlNode(_obj=ret)
     def get_properties(self):
         ret = libxml2mod.properties(self._o)
-        if ret == None:
-            return None
-        return xmlAttr(_obj=ret)
+        return None if ret is None else xmlAttr(_obj=ret)
     def get_prev(self):
         ret = libxml2mod.prev(self._o)
-        if ret == None:
-            return None
-        return xmlNode(_obj=ret)
+        return None if ret is None else xmlNode(_obj=ret)
     def get_content(self):
         return libxml2mod.xmlNodeGetContent(self._o)
     getContent = get_content  # why is this duplicate naming needed ?
@@ -300,7 +279,7 @@ class xmlCore:
         return libxml2mod.type(self._o)
     def get_doc(self):
         ret = libxml2mod.doc(self._o)
-        if ret == None:
+        if ret is None:
             if self.type in ["document_xml", "document_html"]:
                 return xmlDoc(_obj=self._o)
             else:
@@ -315,34 +294,22 @@ class xmlCore:
         def __getattr__(self, attr):
             if attr == "parent":
                 ret = libxml2mod.parent(self._o)
-                if ret == None:
-                    return None
-                return xmlNode(_obj=ret)
+                return None if ret is None else xmlNode(_obj=ret)
             elif attr == "properties":
                 ret = libxml2mod.properties(self._o)
-                if ret == None:
-                    return None
-                return xmlAttr(_obj=ret)
+                return None if ret is None else xmlAttr(_obj=ret)
             elif attr == "children":
                 ret = libxml2mod.children(self._o)
-                if ret == None:
-                    return None
-                return xmlNode(_obj=ret)
+                return None if ret is None else xmlNode(_obj=ret)
             elif attr == "last":
                 ret = libxml2mod.last(self._o)
-                if ret == None:
-                    return None
-                return xmlNode(_obj=ret)
+                return None if ret is None else xmlNode(_obj=ret)
             elif attr == "next":
                 ret = libxml2mod.next(self._o)
-                if ret == None:
-                    return None
-                return xmlNode(_obj=ret)
+                return None if ret is None else xmlNode(_obj=ret)
             elif attr == "prev":
                 ret = libxml2mod.prev(self._o)
-                if ret == None:
-                    return None
-                return xmlNode(_obj=ret)
+                return None if ret is None else xmlNode(_obj=ret)
             elif attr == "content":
                 return libxml2mod.xmlNodeGetContent(self._o)
             elif attr == "name":
@@ -351,8 +318,8 @@ class xmlCore:
                 return libxml2mod.type(self._o)
             elif attr == "doc":
                 ret = libxml2mod.doc(self._o)
-                if ret == None:
-                    if self.type == "document_xml" or self.type == "document_html":
+                if ret is None:
+                    if self.type in ["document_xml", "document_html"]:
                         return xmlDoc(_obj=self._o)
                     else:
                         return None
@@ -429,7 +396,7 @@ class xmlCore:
     #
     def xpathEval(self, expr):
         doc = self.doc
-        if doc == None:
+        if doc is None:
             return None
         ctxt = doc.xpathNewContext()
         ctxt.setContextNode(self)
@@ -474,9 +441,7 @@ class xmlCore:
         """
 
         ret = libxml2mod.xmlNodeRemoveNsDef(self._o, href)
-        if ret is None:return None
-        __tmp = xmlNs(_obj=ret)
-        return __tmp
+        return None if ret is None else xmlNs(_obj=ret)
 
     # support for python2 iterators
     def walk_depth_first(self):
@@ -543,11 +508,11 @@ class xmlCoreBreadthFirstItertor:
 def nodeWrap(o):
     # TODO try to cast to the most appropriate node class
     name = libxml2mod.type(o)
-    if name == "element" or name == "text":
+    if name in ["element", "text"]:
         return xmlNode(_obj=o)
     if name == "attribute":
         return xmlAttr(_obj=o)
-    if name[0:8] == "document":
+    if name[:8] == "document":
         return xmlDoc(_obj=o)
     if name == "namespace":
         return xmlNs(_obj=o)
@@ -557,19 +522,16 @@ def nodeWrap(o):
         return xmlAttribute(_obj=o)
     if name == "entity_decl":
         return xmlEntity(_obj=o)
-    if name == "dtd":
-        return xmlDtd(_obj=o)
-    return xmlNode(_obj=o)
+    return xmlDtd(_obj=o) if name == "dtd" else xmlNode(_obj=o)
 
 def xpathObjectRet(o):
     otype = type(o)
     if otype == type([]):
-        ret = map(xpathObjectRet, o)
-        return ret
+        return map(xpathObjectRet, o)
     elif otype == type(()):
         ret = map(xpathObjectRet, o)
         return tuple(ret)
-    elif otype == type('') or otype == type(0) or otype == type(0.0):
+    elif otype in [type(''), type(0), type(0.0)]:
         return o
     else:
         return nodeWrap(o)
@@ -605,13 +567,11 @@ def registerErrorHandler(f, ctx):
     import sys
     if not sys.modules.has_key('libxslt'):
         # normal behaviour when libxslt is not imported
-        ret = libxml2mod.xmlRegisterErrorHandler(f,ctx)
-    else:
-        # when libxslt is already imported, one must
-        # use libxst's error handler instead
-        import libxslt
-        ret = libxslt.registerErrorHandler(f,ctx)
-    return ret
+        return libxml2mod.xmlRegisterErrorHandler(f,ctx)
+    # when libxslt is already imported, one must
+    # use libxst's error handler instead
+    import libxslt
+    return libxslt.registerErrorHandler(f,ctx)
 
 class parserCtxtCore:
 
@@ -712,11 +672,7 @@ class xmlTextReaderCore:
         """Return (f,arg) as previously registered with setErrorHandler
            or (None,None)."""
         f,arg = libxml2mod.xmlTextReaderGetErrorHandler(self._o)
-        if f is None:
-            return None,None
-        else:
-            # assert f is _xmlTextReaderErrorFunc
-            return arg
+        return (None, None) if f is None else arg
 
 #
 # The cleanup now goes though a wrappe in libxml.c

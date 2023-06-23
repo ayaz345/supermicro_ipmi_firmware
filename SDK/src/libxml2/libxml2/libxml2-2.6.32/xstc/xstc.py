@@ -115,7 +115,7 @@ vendor = None
 def handleError(test, msg):
 	global options
 	if not options.silent:
-		test.addLibLog("'%s'   LIB: %s" % (test.name, msg))
+		test.addLibLog(f"'{test.name}'   LIB: {msg}")
 	if msg.find("Unimplemented") > -1:
 		test.failUnimplemented()
 	elif msg.find("Internal") > -1:
@@ -192,13 +192,13 @@ class XSTCTestCase:
 		# Get the test-group.
 		#
 		self.runner = runner
-		self.group = runner.getGroup(self.groupName)				
-		if vendor == vendorMS or vendor == vendorSUN:
+		self.group = runner.getGroup(self.groupName)
+		if vendor in [vendorMS, vendorSUN]:
 			#
 			# Use the last given directory for the combine name.
 			#
 			dirs = self.fileName.split("/")
-			self.combineName = dirs[len(dirs) -2]					
+			self.combineName = dirs[len(dirs) -2]
 		elif vendor == vendorNIST:
 			#
 			# NIST files are named in the following form:
@@ -211,7 +211,7 @@ class XSTCTestCase:
 			# Group-names have the form: "atomic-normalizedString-length-1"
 			#
 			tokens = self.groupName.split("-")
-			self.combineName = "%s-%s" % (tokens[0], tokens[1])
+			self.combineName = f"{tokens[0]}-{tokens[1]}"
 		else:
 			self.combineName = "unkown"
 			raise Exception("Could not compute the combine name of a test.")
@@ -329,10 +329,9 @@ def parseSchema(fileName):
 	schema = None
 	ctxt = libxml2.schemaNewParserCtxt(fileName)
 	try:
-		try:
-			schema = ctxt.schemaParse()
-		except:
-			pass
+		schema = ctxt.schemaParse()
+	except:
+		pass
 	finally:		
 		del ctxt
 		return schema
@@ -353,9 +352,9 @@ class XSTCSchemaTest(XSTCTestCase):
 			#
 			# Parse the schema.
 			#
-			self.debugMsg("loading schema: %s" % filePath)
+			self.debugMsg(f"loading schema: {filePath}")
 			schema = parseSchema(filePath)
-			self.debugMsg("after loading schema")						
+			self.debugMsg("after loading schema")
 			if schema is None:
 				self.debugMsg("schema is None")
 				self.debugMsg("checking for IO errors...")
@@ -364,7 +363,7 @@ class XSTCSchemaTest(XSTCTestCase):
 			self.debugMsg("checking schema result")
 			if (schema is None and self.val) or (schema is not None and self.val == 0):
 				self.debugMsg("schema result is BAD")
-				if (schema == None):
+				if schema is None:
 					self.fail(msgSchemaNotValidButShould)
 				else:
 					self.fail(msgSchemaValidButShouldNot)
@@ -388,8 +387,8 @@ class XSTCInstanceTest(XSTCTestCase):
 		if not self.group.schemaParsed and self.group.schemaTried:
 			self.failNoSchema()
 			return
-					
-		self.debugMsg("loading instance: %s" % filePath)
+
+		self.debugMsg(f"loading instance: {filePath}")
 		parserCtxt = libxml2.newParserCtxt()
 		if (parserCtxt is None):
 			# TODO: Is this one necessary, or will an exception
@@ -397,23 +396,22 @@ class XSTCInstanceTest(XSTCTestCase):
 			raise Exception("Could not create the instance parser context.")
 		if not options.validationSAX:
 			try:
-				try:
-					instance = parserCtxt.ctxtReadFile(filePath, None, libxml2.XML_PARSE_NOWARNING)
-				except:
-					# Suppress exceptions.
-					pass
+				instance = parserCtxt.ctxtReadFile(filePath, None, libxml2.XML_PARSE_NOWARNING)
+			except:
+				# Suppress exceptions.
+				pass
 			finally:
 				del parserCtxt
 			self.debugMsg("after loading instance")
 			if instance is None:
 				self.debugMsg("instance is None")
 				self.failCritical("Failed to parse the instance for unknown reasons.")
-				return		
+				return
 		try:
 			#
 			# Validate the instance.
 			#
-			self.debugMsg("loading schema: %s" % self.group.schemaFileName)
+			self.debugMsg(f"loading schema: {self.group.schemaFileName}")
 			schema = parseSchema(self.group.schemaFileName)
 			try:
 				validationCtxt = schema.schemaNewValidCtxt()
@@ -475,12 +473,20 @@ class XSTCTestRunner:
 		self.curGroup = None
 
 	def createCounters(self):
-		counters = {self.CNT_TOTAL:0, self.CNT_RAN:0, self.CNT_SUCCEEDED:0,
-		self.CNT_FAILED:0, self.CNT_UNIMPLEMENTED:0, self.CNT_INTERNAL:0, self.CNT_BAD:0,
-		self.CNT_EXCEPTED:0, self.CNT_MEMLEAK:0, self.CNT_NOSCHEMA:0, self.CNT_NOTACCEPTED:0,
-		self.CNT_SCHEMA_TEST:0}
-
-		return counters
+		return {
+			self.CNT_TOTAL: 0,
+			self.CNT_RAN: 0,
+			self.CNT_SUCCEEDED: 0,
+			self.CNT_FAILED: 0,
+			self.CNT_UNIMPLEMENTED: 0,
+			self.CNT_INTERNAL: 0,
+			self.CNT_BAD: 0,
+			self.CNT_EXCEPTED: 0,
+			self.CNT_MEMLEAK: 0,
+			self.CNT_NOSCHEMA: 0,
+			self.CNT_NOTACCEPTED: 0,
+			self.CNT_SCHEMA_TEST: 0,
+		}
 
 	def addTest(self, test):
 		self.testList.append(test)
@@ -543,23 +549,25 @@ class XSTCTestRunner:
 		# out.write("    succeeded       : %d\n" % counters[self.CNT_SUCCEEDED])
 		if counters[self.CNT_NOTACCEPTED] > 0:
 			out.write(" %d not accepted" % (counters[self.CNT_NOTACCEPTED]))
-		if counters[self.CNT_FAILED] > 0 or counters[self.CNT_MEMLEAK] > 0:
-			if counters[self.CNT_FAILED] > 0:
-				out.write(" %d failed" % (counters[self.CNT_FAILED]))
-				out.write(" (")
-				if counters[self.CNT_INTERNAL] > 0:
-					out.write(" %d internal" % (counters[self.CNT_INTERNAL]))
-				if counters[self.CNT_UNIMPLEMENTED] > 0:
-					out.write(" %d unimplemented" % (counters[self.CNT_UNIMPLEMENTED]))
-				if counters[self.CNT_NOSCHEMA] > 0:
-					out.write(" %d skip-invalid-schema" % (counters[self.CNT_NOSCHEMA]))
-				if counters[self.CNT_BAD] > 0:
-					out.write(" %d bad" % (counters[self.CNT_BAD]))
-				if counters[self.CNT_EXCEPTED] > 0:
-					out.write(" %d exception" % (counters[self.CNT_EXCEPTED]))
-				out.write(" )")
+		if counters[self.CNT_FAILED] > 0:
+			out.write(" %d failed" % (counters[self.CNT_FAILED]))
+			out.write(" (")
+			if counters[self.CNT_INTERNAL] > 0:
+				out.write(" %d internal" % (counters[self.CNT_INTERNAL]))
+			if counters[self.CNT_UNIMPLEMENTED] > 0:
+				out.write(" %d unimplemented" % (counters[self.CNT_UNIMPLEMENTED]))
+			if counters[self.CNT_NOSCHEMA] > 0:
+				out.write(" %d skip-invalid-schema" % (counters[self.CNT_NOSCHEMA]))
+			if counters[self.CNT_BAD] > 0:
+				out.write(" %d bad" % (counters[self.CNT_BAD]))
+			if counters[self.CNT_EXCEPTED] > 0:
+				out.write(" %d exception" % (counters[self.CNT_EXCEPTED]))
+			out.write(" )")
 			if counters[self.CNT_MEMLEAK] > 0:
-				out.write(" %d leaks" % (counters[self.CNT_MEMLEAK]))			
+				out.write(" %d leaks" % (counters[self.CNT_MEMLEAK]))
+			out.write("\n")
+		elif counters[self.CNT_MEMLEAK] > 0:
+			out.write(" %d leaks" % (counters[self.CNT_MEMLEAK]))
 			out.write("\n")
 		else:
 			out.write(" all passed\n")
@@ -575,11 +583,13 @@ class XSTCTestRunner:
 			counters[self.CNT_TOTAL] += 1
 			counters[self.CNT_RAN] += 1
 			counters = self.updateCounters(test, counters)
-		if options.reportErrCombines and (counters[self.CNT_FAILED] == 0) and (counters[self.CNT_MEMLEAK] == 0):
-			pass
-		else:
+		if (
+			not options.reportErrCombines
+			or counters[self.CNT_FAILED] != 0
+			or counters[self.CNT_MEMLEAK] != 0
+		):
 			if options.enableLog:
-				self.displayResults(self.logFile, False, combName, counters)				
+				self.displayResults(self.logFile, False, combName, counters)
 			self.displayResults(sys.stdout, False, combName, counters)
 
 	def displayTestLog(self, test):

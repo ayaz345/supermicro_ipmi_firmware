@@ -21,7 +21,7 @@ for f in sys.argv[1], sys.argv[2]:
         sys.stderr.write("Error: file '%s' does not exist\n" % f)
         usage()
 
-nm_args = " ".join([x for x in sys.argv[3:]])
+nm_args = " ".join(list(sys.argv[3:]))
 def getsizes(file):
     sym = {}
     for l in os.popen("nm --size-sort %s %s" % (nm_args, file)).readlines():

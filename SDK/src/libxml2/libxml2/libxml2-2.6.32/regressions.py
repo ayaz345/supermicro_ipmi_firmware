@@ -257,7 +257,7 @@ class testDefaults:
         if key not in defaultParams:
             defaultParams[key] = txt
         else:
-            defaultParams[key] += ' ' + txt
+            defaultParams[key] += f' {txt}'
         
     def processNode(self, reader, curClass):
         if reader.Depth() == 2:
@@ -289,7 +289,7 @@ class testClass:
             self.testParams[key] = data
         else:
             if self.testParams[key] != '':
-                data = ' ' + data
+                data = f' {data}'
             self.testParams[key] += data
 
     def processNode(self, reader, curClass):
@@ -299,7 +299,7 @@ class testClass:
                 if reader.Name() not in self.testParams:
                     self.testParams[reader.Name()] = ''
             elif reader.NodeType() == 15:
-                if (reader.Name() != '#text') and (reader.Name() != '#comment'):
+                if reader.Name() not in ['#text', '#comment']:
                     self.addToDict(reader.Name())
         elif reader.Depth() == 3:
             if reader.Name() == '#text':

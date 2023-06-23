@@ -15,13 +15,9 @@ import getopt
 import random
 import re
 
-ldh = []
-# Letters
-for i in range(97, 122):
-    ldh.append(chr(i))
+ldh = [chr(i) for i in range(97, 122)]
 # Digits
-for i in range(48, 57):
-    ldh.append(chr(i))
+ldh.extend(chr(i) for i in range(48, 57))
 # Hyphen
 ldh.append('-')
 
@@ -36,23 +32,24 @@ domain_ns = r'^([a-z0-9-\.]+)((\s+\d+)?(\s+IN)?|(\s+IN)(\s+\d+)?)\s+NS'
 domain_ns_re = re.compile(domain_ns, re.IGNORECASE)
 
 def remove_tld(label, tld):
-    if label.endswith('.' + tld + '.'):
-        return label[0:-(1+ len(tld) + 1)]
-    else:
-        return label
+    return label[:-(1+ len(tld) + 1)] if label.endswith(f'.{tld}.') else label
 
 def gen_random_label():
     label = ""
-    for i in range(gen.randint(1, maxsize)):
+    for _ in range(gen.randint(1, maxsize)):
         label = label + gen.choice(ldh)
     return label
 
 def make_domain(label):
-    return "www." + label + "." + tld + "     A"
+    return f"www.{label}.{tld}     A"
 
 def usage():
-    sys.stdout.write("Usage: " + sys.argv[0] + " [-n number] " + \
-                     "[-p percent-random] [-t TLD]\n")
+    sys.stdout.write(
+        (
+            f"Usage: {sys.argv[0]} [-n number] "
+            + "[-p percent-random] [-t TLD]\n"
+        )
+    )
     sys.stdout.write("       [-m MAXSIZE] [-f zone-file]\n")
     
 try:

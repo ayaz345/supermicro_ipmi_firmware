@@ -81,7 +81,7 @@ Element item failed to validate content
 
 def callback(ctx, str):
     global err
-    err = err + "%s" % (str)
+    err = f"{err}{str}"
 libxml2.registerErrorHandler(callback, "")
 
 f = StringIO.StringIO(docstr)

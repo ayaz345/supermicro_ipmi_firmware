@@ -14,7 +14,7 @@ err=""
 def callback(ctx, str):
      global err
 
-     err = err + "%s %s" % (ctx, str)
+     err = f"{err}{ctx} {str}"
 
 got_exc = 0
 libxml2.registerErrorHandler(callback, "-->")

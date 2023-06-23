@@ -262,10 +262,7 @@ extra_post_call = {
 modules = []
 
 def is_skipped_module(name):
-    for mod in skipped_modules:
-        if mod == name:
-	    return 1
-    return 0
+    return next((1 for mod in skipped_modules if mod == name), 0)
 
 def is_skipped_function(name):
     for fun in skipped_functions:
@@ -277,10 +274,7 @@ def is_skipped_function(name):
     return 0
 
 def is_skipped_memcheck(name):
-    for fun in skipped_memcheck:
-        if fun == name:
-	    return 1
-    return 0
+    return next((1 for fun in skipped_memcheck if fun == name), 0)
 
 missing_types = {}
 def add_missing_type(name, func):
@@ -436,10 +430,7 @@ static void des_%s(int no ATTRIBUTE_UNUSED, %s val ATTRIBUTE_UNUSED, int nr ATTR
 known_return_types = []
 
 def is_known_return_type(name):
-    for type in known_return_types:
-        if type == name:
-	    return 1
-    return 0
+    return next((1 for type in known_return_types if type == name), 0)
 
 #
 # Copy the beginning of the C test program result
@@ -448,7 +439,7 @@ def is_known_return_type(name):
 try:
     input = open("testapi.c", "r")
 except:
-    input = open(srcPref + "testapi.c", "r")
+    input = open(f"{srcPref}testapi.c", "r")
 test = open('testapi.c.new', 'w')
 
 def compare_and_save():

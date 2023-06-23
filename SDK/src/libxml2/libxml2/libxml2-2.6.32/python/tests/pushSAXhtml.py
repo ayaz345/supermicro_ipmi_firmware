@@ -10,35 +10,35 @@ log = ""
 class callback:
     def startDocument(self):
         global log
-        log = log + "startDocument:"
+        log = f"{log}startDocument:"
 
     def endDocument(self):
         global log
-        log = log + "endDocument:"
+        log = f"{log}endDocument:"
 
     def startElement(self, tag, attrs):
         global log
-        log = log + "startElement %s %s:" % (tag, attrs)
+        log = f"{log}startElement {tag} {attrs}:"
 
     def endElement(self, tag):
         global log
-        log = log + "endElement %s:" % (tag)
+        log = f"{log}endElement {tag}:"
 
     def characters(self, data):
         global log
-        log = log + "characters: %s:" % (data)
+        log = f"{log}characters: {data}:"
 
     def warning(self, msg):
         global log
-        log = log + "warning: %s:" % (msg)
+        log = f"{log}warning: {msg}:"
 
     def error(self, msg):
         global log
-        log = log + "error: %s:" % (msg)
+        log = f"{log}error: {msg}:"
 
     def fatalError(self, msg):
         global log
-        log = log + "fatalError: %s:" % (msg)
+        log = f"{log}fatalError: {msg}:"
 
 handler = callback()
 

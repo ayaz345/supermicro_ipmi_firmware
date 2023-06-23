@@ -29,19 +29,24 @@ class FirmwareFooter:
 			self.fwtag2 = 0
 
 	def getRawString(self):
-		if self.footerver == 2:
-			contents = "ATENs_FW"+struct.pack("<bbbIb", self.rev1, self.rev2, self.fwtag1, self.checksum, self.fwtag2)
-		else:
-			contents = "ATENs_FW"+struct.pack("<bbI", self.rev1, self.rev2, self.checksum)
-		return contents
+		return (
+			"ATENs_FW"
+			+ struct.pack(
+				"<bbbIb",
+				self.rev1,
+				self.rev2,
+				self.fwtag1,
+				self.checksum,
+				self.fwtag2,
+			)
+			if self.footerver == 2
+			else "ATENs_FW" + struct.pack("<bbI", self.rev1, self.rev2, self.checksum)
+		)
 
 	def __str__(self):
 		return "Firmware footer version %i firmware version %i.%i checksum: 0x%x tag: 0x%x%x" % (self.footerver, self.rev1, self.rev2, self.checksum, self.fwtag1, self.fwtag2)
 
 	def computeFooterChecksum(self, imagecrc):
-		rawCRCBuf = ""
-		for cur in imagecrc:
-			rawCRCBuf += struct.pack("<I",cur)
-
+		rawCRCBuf = "".join(struct.pack("<I",cur) for cur in imagecrc)
 		return (zlib.crc32(rawCRCBuf) & 0xffffffff)
 

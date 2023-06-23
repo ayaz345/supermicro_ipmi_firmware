@@ -82,9 +82,7 @@ def escape(raw):
     return raw
 
 def uniq(items):
-    d = {}
-    for item in items:
-        d[item]=1
+    d = {item: 1 for item in items}
     return d.keys()
 
 class identifier:
@@ -2123,8 +2121,7 @@ def rebuild():
 #
 def parse(filename):
     parser = CParser(filename)
-    idx = parser.parse()
-    return idx
+    return parser.parse()
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

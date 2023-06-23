@@ -382,7 +382,7 @@ testsuite = libxml2.parseFile(CONF)
 #
 def callback(ctx, str):
     global log
-    log.write("%s%s" % (ctx, str))
+    log.write(f"{ctx}{str}")
 
 libxml2.registerErrorHandler(callback, "")
 

@@ -34,7 +34,7 @@ libxml2.lineNumbersDefault(1)
 #
 def callback(ctx, str):
     global log
-    log.write("%s%s" % (ctx, str))
+    log.write(f"{ctx}{str}")
 
 libxml2.registerErrorHandler(callback, "")
 
@@ -46,7 +46,7 @@ def resolver(URL, ID, ctxt):
     global resources
 
     if string.find(URL, '#') != -1:
-        URL = URL[0:string.find(URL, '#')]
+        URL = URL[:string.find(URL, '#')]
     if resources.has_key(URL):
         return(StringIO.StringIO(resources[URL]))
     log.write("Resolver failure: asked %s\n" % (URL))
